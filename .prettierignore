@@ -1,0 +1,8 @@
+node_modules
+.wxt
+.output
+pnpm-lock.yaml
+test-results
+playwright-report
+docs/screenshots
+extension-identity.json

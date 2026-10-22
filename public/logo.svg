@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" fill="none">
+  <title>Margin · 页边</title>
+  <rect width="128" height="128" rx="34" fill="#171717" />
+  <path d="M30 37c12-3 23 0 34 8v50c-11-8-22-11-34-8V37Z" fill="#FFFFFF" />
+  <path d="M70 45c9-6 18-9 28-8v50c-10-1-19 2-28 8V45Z" fill="#E5E5E5" />
+  <path
+    d="M39 51c6 0 11 2 16 5M39 63c6 0 11 2 16 5M39 75c6 0 11 2 16 5"
+    stroke="#171717"
+    stroke-width="3.5"
+    stroke-linecap="round"
+  />
+  <path d="m94 19 3.3 9.7L107 32l-9.7 3.3L94 45l-3.3-9.7L81 32l9.7-3.3L94 19Z" fill="#FFFFFF" />
+</svg>

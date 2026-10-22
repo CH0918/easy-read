@@ -1,0 +1,366 @@
+.margin-reader {
+  all: initial;
+  display: flex;
+  flex-direction: column;
+  width: 390px;
+  max-width: calc(100vw - 24px);
+  max-height: min(620px, calc(100vh - 24px));
+  border: 1px solid #e5e5e5;
+  border-radius: 13px;
+  background: #fff;
+  box-shadow:
+    0 16px 60px #00000025,
+    0 3px 12px #0000000b;
+  color: #171717;
+  font:
+    12px/1.6 -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    'PingFang SC',
+    'Microsoft YaHei',
+    sans-serif;
+  text-align: left;
+  letter-spacing: normal;
+  overflow: hidden;
+  isolation: isolate;
+  color-scheme: light;
+  -webkit-font-smoothing: antialiased;
+}
+.margin-reader *,
+.margin-reader *::before,
+.margin-reader *::after {
+  box-sizing: border-box;
+}
+.margin-reader h2,
+.margin-reader p,
+.margin-reader blockquote {
+  margin: 0;
+}
+.margin-reader button,
+.margin-reader textarea {
+  font: inherit;
+  color: inherit;
+  letter-spacing: normal;
+}
+.margin-reader button {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.margin-reader button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.margin-reader button:focus-visible,
+.margin-reader a:focus-visible {
+  outline: 2px solid #525252;
+  outline-offset: 3px;
+}
+.margin-reader svg {
+  flex-shrink: 0;
+}
+.margin-icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 27px;
+  height: 27px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  padding: 0;
+  color: #525252 !important;
+}
+.margin-icon-button:hover {
+  background: #f5f5f5;
+  color: #525252 !important;
+}
+.margin-thread {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+.margin-selection {
+  padding: 10px 13px;
+  border-bottom: 1px solid #e5e5e5;
+  background: #fafafa;
+  flex-shrink: 0;
+}
+.margin-selection blockquote {
+  padding-left: 9px;
+  border-left: 2px solid #d4d4d4;
+  max-height: 64px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #525252;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.margin-viewport {
+  min-height: 0;
+  max-height: 335px;
+  overflow-y: auto;
+  overflow-anchor: none;
+  overscroll-behavior: contain;
+  position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: #e5e5e5 transparent;
+  padding: 0 13px;
+}
+.margin-suggestions {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  padding: 12px 0;
+}
+.margin-suggestions button {
+  border: 1px solid #e5e5e5;
+  background: #fff;
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #404040;
+  border-radius: 6px;
+  line-height: 1.4;
+}
+.margin-suggestions button:hover {
+  background: #f5f5f5;
+  border-color: #d4d4d4;
+}
+.margin-composer-wrap {
+  padding: 0 13px 12px;
+  flex-shrink: 0;
+}
+.margin-composer {
+  border: 1px solid #e5e5e5;
+  border-radius: 9px;
+  background: #fff;
+  padding: 10px 11px 8px;
+  box-shadow: 0 2px 4px #00000003;
+}
+.margin-composer:focus-within {
+  border-color: #737373;
+  box-shadow: 0 0 0 2px #00000014;
+}
+.margin-input {
+  display: block;
+  width: 100%;
+  field-sizing: content;
+  min-height: 44px;
+  max-height: 110px;
+  resize: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  outline: none;
+  box-shadow: none !important;
+  font-size: 13px !important;
+  line-height: 1.7 !important;
+  color: #171717 !important;
+  caret-color: #171717;
+}
+.margin-input::placeholder {
+  color: #737373;
+}
+.margin-composer-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 6px;
+}
+.margin-composer-bottom > span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: #525252;
+  max-width: 270px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.margin-send {
+  height: 27px;
+  width: 27px;
+  border: 0;
+  border-radius: 6px;
+  background: #171717;
+  color: #fff !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.margin-send:not(:disabled):hover {
+  background: #404040;
+}
+.margin-user-message {
+  margin: 15px 0 12px 35px;
+  padding: 9px 11px;
+  border: 1px solid #e5e5e5;
+  background: #f5f5f5;
+  border-radius: 9px 9px 2px 9px;
+  color: #262626;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.margin-assistant-message {
+  padding: 12px 0;
+}
+.margin-message-content {
+  font-size: 13px;
+  line-height: 1.9;
+  color: #262626;
+  overflow-wrap: anywhere;
+}
+.margin-markdown p {
+  margin-bottom: 9px;
+}
+.margin-markdown p:last-child {
+  margin-bottom: 0;
+}
+.margin-markdown strong {
+  font-weight: 600;
+  color: #171717;
+}
+.margin-markdown em {
+  font-family: Georgia, 'Times New Roman', serif;
+}
+.margin-markdown a {
+  color: #525252;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.margin-markdown pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: #f5f5f5;
+  border: 1px solid #e5e5e5;
+  border-radius: 5px;
+  padding: 10px;
+  overflow: auto;
+  font:
+    10px/1.8 ui-monospace,
+    monospace;
+}
+.margin-markdown code {
+  background: #f5f5f5;
+  border-radius: 3px;
+  padding: 1px 3px;
+  font-size: 11px;
+}
+.margin-markdown pre code {
+  padding: 0;
+}
+.margin-markdown ul,
+.margin-markdown ol {
+  padding-left: 19px;
+  margin: 8px 0;
+}
+.margin-markdown h1,
+.margin-markdown h2,
+.margin-markdown h3,
+.margin-markdown h4 {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 12px 0 6px;
+}
+.margin-markdown blockquote {
+  border-left: 2px solid #d4d4d4;
+  padding-left: 11px;
+  color: #525252;
+  margin: 8px 0;
+}
+.margin-markdown table {
+  border-collapse: collapse;
+  display: block;
+  overflow-x: auto;
+  font-size: 10px;
+}
+.margin-markdown td,
+.margin-markdown th {
+  border: 1px solid #e5e5e5;
+  padding: 5px 7px;
+}
+.margin-actions {
+  display: flex;
+  gap: 3px;
+  margin-top: 6px;
+}
+.margin-actions .margin-icon-button {
+  width: 24px;
+  height: 24px;
+}
+.margin-error {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  padding: 9px 11px;
+  border-radius: 7px;
+  font-size: 10px;
+  line-height: 1.8;
+  color: #525252;
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+}
+.margin-thinking {
+  font-size: 10px;
+  color: #737373;
+  padding: 5px 0;
+}
+.margin-thinking span {
+  animation: margin-pulse 1.3s infinite;
+}
+.margin-scroll-bottom {
+  position: sticky;
+  bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 8px;
+  width: 27px;
+  height: 27px;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 50%;
+  box-shadow: 0 3px 8px #00000012;
+  color: #525252 !important;
+  padding: 0;
+}
+.margin-scroll-bottom:disabled {
+  display: none;
+}
+.margin-setup {
+  padding: 12px 0;
+}
+.margin-setup-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: #171717;
+  color: #fff !important;
+  border: 0;
+  border-radius: 6px;
+  padding: 8px 13px;
+  font-size: 10px !important;
+}
+.margin-setup-button:hover {
+  background: #404040;
+}
+@keyframes margin-pulse {
+  50% {
+    opacity: 0.3;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .margin-reader * {
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+}
