@@ -12,8 +12,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value);
 }
 
-function validateSettings(value: unknown): BackupSettings {
-  if (!isRecord(value)) throw new Error('备份中缺少配置信息。');
+function validateSettings(input: unknown): BackupSettings {
+  if (!isRecord(input)) throw new Error('备份中缺少配置信息。');
+  // Version 1 backups made before this preference existed retain model-default behavior.
+  const value = Object.hasOwn(input, 'reasoningEffort')
+    ? input
+    : { ...input, reasoningEffort: DEFAULT_SETTINGS.reasoningEffort };
   for (const key of backupKeys) {
     const item = value[key];
     const expected = DEFAULT_SETTINGS[key];

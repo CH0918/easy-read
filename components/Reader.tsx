@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, type ReactNode } from 'react';
 import {
   ActionBarPrimitive,
   AssistantRuntimeProvider,
@@ -7,6 +7,7 @@ import {
   ErrorPrimitive,
   MessagePrimitive,
   ThreadPrimitive,
+  useAuiState,
   useLocalRuntime,
   type ChatModelAdapter,
 } from '@assistant-ui/react';
@@ -16,6 +17,33 @@ import { streamFromBackground } from '../lib/bridge';
 import { QUICK_EXPLAIN_PROMPT } from '../lib/prompt';
 import type { PageContext, PublicSettings } from '../lib/types';
 import { ReaderInput } from './ReaderInput';
+
+function ReaderViewport({ children }: { children: ReactNode }) {
+  const userMessageCount = useAuiState(
+    (state) => state.thread.messages.filter((message) => message.role === 'user').length,
+  );
+  const viewport = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    // Wait for the new message to mount; runStart can fire before React sees the new count.
+    if (userMessageCount > 1) {
+      viewport.current?.scrollTo({ top: viewport.current.scrollHeight, behavior: 'instant' });
+    }
+  }, [userMessageCount]);
+
+  return (
+    <ThreadPrimitive.Viewport
+      ref={viewport}
+      className="margin-viewport"
+      autoScroll={userMessageCount > 1}
+      scrollToBottomOnRunStart={false}
+      scrollToBottomOnInitialize={false}
+      scrollToBottomOnThreadSwitch={false}
+    >
+      {children}
+    </ThreadPrimitive.Viewport>
+  );
+}
 
 function Markdown() {
   return (
@@ -155,13 +183,7 @@ export function Reader({
           <blockquote aria-label="选中原文">{context.selection}</blockquote>
         </div>
         <ThreadPrimitive.Root className="margin-thread">
-          <ThreadPrimitive.Viewport
-            className="margin-viewport"
-            autoScroll={false}
-            scrollToBottomOnRunStart={false}
-            scrollToBottomOnInitialize={false}
-            scrollToBottomOnThreadSwitch={false}
-          >
+          <ReaderViewport>
             <AuiIf condition={(state) => state.thread.isEmpty}>
               {!settings.configured && (
                 <div className="margin-setup">
@@ -179,7 +201,7 @@ export function Reader({
             >
               <ArrowDown size={14} />
             </ThreadPrimitive.ScrollToBottom>
-          </ThreadPrimitive.Viewport>
+          </ReaderViewport>
           {settings.configured && (
             <div className="margin-composer-wrap">
               <div className="margin-suggestions" role="group" aria-label="快捷提问">

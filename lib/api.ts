@@ -1,4 +1,5 @@
 import type { ConnectionConfig } from './types';
+import { reasoningParameters } from './reasoning';
 
 export function normalizeBaseUrl(value: string): string {
   let url: URL;
@@ -49,6 +50,16 @@ async function request(
     },
   });
   if (!response.ok) {
+    if (
+      path === 'chat/completions' &&
+      [400, 422].includes(response.status) &&
+      config.reasoningEffort &&
+      config.reasoningEffort !== 'default'
+    ) {
+      throw new Error(
+        '服务拒绝了请求参数，请检查模型及思考强度。部分模型不支持关闭思考或所选档位，可改为“跟随模型默认”后重新测试。',
+      );
+    }
     const known: Record<number, string> = {
       401: 'API Key 无效或已过期，请检查后重试。',
       403: '没有访问权限，请确认密钥、模型权限或本地服务的跨域设置。',
@@ -138,7 +149,12 @@ export async function* streamCompletion(
     {
       method: 'POST',
       signal,
-      body: JSON.stringify({ model: config.model, messages, stream: true }),
+      body: JSON.stringify({
+        model: config.model,
+        messages,
+        stream: true,
+        ...reasoningParameters(config),
+      }),
     },
     120000,
   );

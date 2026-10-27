@@ -1,11 +1,13 @@
 export type Modifier = 'Alt' | 'Control' | 'Meta' | 'Shift';
 export type Shortcut = { modifiers: Modifier[]; code: string | null };
 export type ContextMode = 'visible' | 'paragraph' | 'selection';
+export type ReasoningEffort = 'default' | 'none' | 'low' | 'medium' | 'high';
 export interface Settings {
   provider: string;
   baseUrl: string;
   apiKey: string;
   model: string;
+  reasoningEffort: ReasoningEffort;
   enabled: boolean;
   shortcut: Shortcut;
   language: 'zh-CN' | 'zh-TW' | 'en';
@@ -39,4 +41,5 @@ export type StreamEvent =
   | { type: 'error'; message: string }
   | { type: 'ping' };
 export type Result<T> = { ok: true; data: T } | { ok: false; error: string };
-export type ConnectionConfig = Pick<Settings, 'baseUrl' | 'apiKey' | 'model'>;
+export type ConnectionConfig = Pick<Settings, 'baseUrl' | 'apiKey' | 'model'> &
+  Partial<Pick<Settings, 'provider' | 'reasoningEffort'>>;

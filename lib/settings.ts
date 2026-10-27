@@ -1,4 +1,4 @@
-import type { PublicSettings, Settings, Shortcut } from './types';
+import type { PublicSettings, ReasoningEffort, Settings, Shortcut } from './types';
 import { isValidShortcut } from './shortcut';
 
 export const PROVIDERS = [
@@ -33,11 +33,20 @@ export const PROVIDERS = [
   { id: 'custom', name: '自定义', mark: '⌘', baseUrl: '', description: '兼容 OpenAI 的接口' },
 ] as const;
 
+export const REASONING_EFFORT_OPTIONS = [
+  { value: 'default', label: '跟随模型默认' },
+  { value: 'none', label: '关闭思考' },
+  { value: 'low', label: '低' },
+  { value: 'medium', label: '中' },
+  { value: 'high', label: '高' },
+] satisfies { value: ReasoningEffort; label: string }[];
+
 export const DEFAULT_SETTINGS: Settings = {
   provider: 'openai',
   baseUrl: 'https://api.openai.com/v1',
   apiKey: '',
   model: '',
+  reasoningEffort: 'default',
   enabled: true,
   shortcut: { modifiers: [], code: 'Space' },
   language: 'zh-CN',
@@ -61,6 +70,8 @@ export function normalizeSettings(value: Partial<Settings>): Settings {
   if (!['visible', 'paragraph', 'selection'].includes(result.contextMode))
     result.contextMode = 'visible';
   if (!['concise', 'detailed'].includes(result.answerStyle)) result.answerStyle = 'concise';
+  if (!REASONING_EFFORT_OPTIONS.some((option) => option.value === result.reasoningEffort))
+    result.reasoningEffort = 'default';
   if (!isValidShortcut(result.shortcut)) {
     result.shortcut = DEFAULT_SETTINGS.shortcut;
   }

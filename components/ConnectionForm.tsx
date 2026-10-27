@@ -12,11 +12,20 @@ import {
   Unplug,
   Zap,
 } from 'lucide-react';
-import { PROVIDERS, isLocalUrl } from '../lib/settings';
+import { PROVIDERS, REASONING_EFFORT_OPTIONS, isLocalUrl } from '../lib/settings';
 import { normalizeBaseUrl } from '../lib/api';
 import { inExtension } from '../lib/storage';
 import type { Result, Settings } from '../lib/types';
 import { Button } from './ui';
+
+const connectionFingerprint = (settings: Settings) =>
+  JSON.stringify([
+    settings.baseUrl,
+    settings.apiKey,
+    settings.model,
+    settings.provider,
+    settings.reasoningEffort,
+  ]);
 
 export function ConnectionForm({
   settings,
@@ -85,23 +94,30 @@ export function ConnectionForm({
 
   useEffect(() => {
     setTestResult(null);
-  }, [settings.model]);
+  }, [settings.model, settings.provider, settings.reasoningEffort]);
 
   const test = async () => {
     setTesting(true);
     setTestResult(null);
-    const fingerprint = `${settings.baseUrl}|${settings.apiKey}|${settings.model}`;
+    const fingerprint = connectionFingerprint(settings);
     try {
       if (!inExtension()) throw new Error('请在已加载的 Chrome 扩展中测试连接。');
       const response: Result<number> = await chrome.runtime.sendMessage({
         type: 'connection:test',
-        config: { baseUrl: settings.baseUrl, apiKey: settings.apiKey, model: settings.model },
+        config: {
+          baseUrl: settings.baseUrl,
+          apiKey: settings.apiKey,
+          model: settings.model,
+          provider: settings.provider,
+          reasoningEffort: settings.reasoningEffort,
+        },
       });
       const current = settingsRef.current;
-      if (fingerprint !== `${current.baseUrl}|${current.apiKey}|${current.model}`) return;
+      if (fingerprint !== connectionFingerprint(current)) return;
       if (!response.ok) throw new Error(response.error);
       setTestResult({ text: `连接成功 · ${(response.data / 1000).toFixed(1)} 秒`, ok: true });
     } catch (error) {
+      if (fingerprint !== connectionFingerprint(settingsRef.current)) return;
       setTestResult({ text: error instanceof Error ? error.message : '连接失败', ok: false });
     } finally {
       setTesting(false);
@@ -278,6 +294,26 @@ export function ConnectionForm({
               : '填写地址和密钥后，将自动获取所有可用模型。'}
           </p>
         )}
+      </div>
+      <div className="field">
+        <label htmlFor="reasoning-effort">思考强度</label>
+        <select
+          id="reasoning-effort"
+          aria-describedby="reasoning-effort-hint"
+          value={settings.reasoningEffort}
+          onChange={(event) =>
+            update({ reasoningEffort: event.target.value as Settings['reasoningEffort'] })
+          }
+        >
+          {REASONING_EFFORT_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <p className="field-hint" id="reasoning-effort-hint">
+          强度越高通常耗时越长。部分模型不支持关闭或所有档位；不确定时选默认，可用“测试连接”检查。
+        </p>
       </div>
       <div className="connection-footer">
         <Button

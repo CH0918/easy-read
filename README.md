@@ -37,10 +37,13 @@ assistant-ui 官方参考：[LocalRuntime](https://www.assistant-ui.com/docs/run
 - 点击工具栏图标即可配置；完整设置页包含 AI 连接、阅读偏好、同步与隐私、使用指南。
 - 输入即时保留为本机草稿，关闭弹窗或设置页后可继续填写；未填完的地址也会保留。点击「保存设置」后正式应用并按偏好同步，草稿本身不会同步。切换服务商或修改其他选项不会清空地址和密钥，可点击「使用默认地址」主动填入所选服务商的地址。
 - OpenAI、DeepSeek、OpenRouter、Ollama 和自定义兼容接口；模型列表来自 `GET /models`，支持搜索、刷新和手动输入。列表代表服务商返回的模型，是否支持聊天及当前密钥能否调用，以测试连接为准。
+- 在「阅读模型」下设置「思考强度」：跟随模型默认、关闭思考、低、中、高。弹窗与完整设置页均可修改，随配置保存、同步和备份；旧配置与旧备份默认跟随模型。测试连接、首次解释和追问使用同一设置。
 - 先选中文字，再按快捷键（默认空格），直接在选区旁显示翻译与上下文解释；卡片支持继续追问，随滚动调整位置。没有正文选区、正在输入或使用输入法时不拦截空格。
+- 默认按「翻译 → 词汇 → 上下文解释」的顺序回答，在翻译下方另加一行「词汇」，列出选区中约四级及以上难度的单词和较难词组：单词附 IPA 音标，词义按当前语境翻译。没有符合条件的词汇时省略，追问时不重复列出；难度与音标由所选 AI 模型判断。
 - 快捷键支持单键、修饰键及组合键，完整按下并松开后确认，Esc 取消录入。旧版默认 Option / Alt 自动升级为空格，已有自定义组合保留；可随时恢复为空格。含修饰键的快捷键仍支持按住后拖选文字，其自动解释可单独开关。
 - 默认提供页面标题、去掉查询参数的 URL、选中文字、所在段落和当前可见正文。可缩小为仅段落或仅选区。
 - 流式 Markdown 回答、继续追问、停止生成、复制回答、重新生成；关闭浮窗取消请求并释放本次对话。
+- 首次解释保持在顶部，发送追问时滚到最新消息并跟随回答；手动向上翻看时暂停跟随，回到底部或点击「滚动到最新回答」后恢复。
 - SVG Logo 位于 [`public/logo.svg`](public/logo.svg)，PNG 图标由该 SVG 自动生成。
 
 ![划词浮窗](docs/screenshots/reader.png)
@@ -112,5 +115,7 @@ tests/             核心行为测试及浏览器完整流程测试
 ## 已知边界
 
 当前仅支持 OpenAI 兼容的 `chat/completions`，不直接支持 Anthropic 原生接口或仅提供 Responses API 的模型。无模型列表的服务可手动输入 ID。本地 Ollama 若返回 403，需要按其官方文档允许扩展来源（`OLLAMA_ORIGINS`）。Chrome 对后台进程有生命周期限制，极慢的服务、浏览器休眠或网络断开可能导致请求中断，浮窗会提示重试。
+
+思考强度通过请求参数控制，默认选项不发送额外参数。OpenAI / Ollama / 自定义兼容接口使用 `reasoning_effort`（关闭为 `none`），OpenRouter 使用 `reasoning.effort`，DeepSeek 使用 `thinking.type` 开关及 `reasoning_effort`。官方地址自动识别；代理地址按所选服务商适配，自定义代理默认按 OpenAI 格式发送。模型对档位和关闭思考的支持不同，服务商也可能映射到其他档位（如 DeepSeek 将中档映射为高档）；不能保证每个模型都能关闭思考。参数被拒绝时会提示重新选择，不会静默重试或更换模型。接口依据：[OpenAI](https://developers.openai.com/api/docs/guides/reasoning)、[DeepSeek](https://api-docs.deepseek.com/guides/thinking_mode)、[OpenRouter](https://openrouter.ai/docs/guides/best-practices/reasoning-tokens)、[Ollama](https://docs.ollama.com/api/openai-compatibility)。
 
 画布文字、跨域 iframe、浏览器内置 PDF 和密码保护的渲染区域不在当前版本范围内。网页应用中已经显示的私人文字仍可能成为上下文；不希望发送时可切换为「仅选中文字」。

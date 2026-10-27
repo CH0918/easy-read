@@ -9,8 +9,13 @@ let extensionId: string;
 let options: Page;
 let article: Page;
 let origin: string;
-const requests: { model: string; messages: { role: string; content: string }[] }[] = [];
+const requests: {
+  model: string;
+  messages: { role: string; content: string }[];
+  reasoning_effort?: string;
+}[] = [];
 const errors: string[] = [];
+let streamingParagraphs: string[] | undefined;
 const fixture = `<!doctype html><html><head><title>The Art of Reading — Margin test</title><style>
 body{margin:0;color:#394333;background:#fcfcf7;font:18px/1.9 Georgia,serif}main{max-width:760px;margin:80px auto;padding:0 35px}h1{font-size:44px;font-weight:400;line-height:1.2}h2{font-size:22px}p{margin:25px 0}small{letter-spacing:3px;font:11px sans-serif;color:#899477}header,footer{display:none}input{padding:10px}button{background:red!important;border:12px solid red!important;color:red!important}textarea{font:40px serif!important}.long{margin-top:1200px}
 </style></head><body><main><small>THE READING ROOM · LANGUAGE & LIFE</small><h1>The art of reading<br>between the lines.</h1><p>Words carry more than their dictionary definitions. A thoughtful reader pays attention to the context, the tone, and what remains unsaid.</p><p id="passage">To truly understand a story, you sometimes need to <span id="target">read between the lines</span>.</p><p id="followup">It is about finding meaning beyond the words on the page.</p><form><label>Private notes <input value="SECRET_FORM_VALUE"></label><textarea>SECRET_TEXTAREA</textarea></form><div hidden>SECRET_HIDDEN</div><p class="long">OFFSCREEN_TEXT_MUST_NOT_BE_SENT</p></main></body></html>`;
@@ -44,10 +49,13 @@ test.beforeAll(async () => {
         : body.messages.filter((m: { role: string }) => m.role === 'user').length > 2
           ? '例如：**Her smile said yes, but reading between the lines, she was unsure.** 她虽然微笑着答应，实际上仍有犹豫。'
           : '**read between the lines** 在这里是「读懂字里行间的意思」。\n\n作者说，理解故事不只看字面，还要结合语气和上下文，体会没有直接说出来的意思。';
-      for (const word of answer.match(/.{1,8}|\n/g) ?? []) {
+      const paragraphs = streamingParagraphs;
+      for (const word of paragraphs ?? answer.match(/.{1,8}|\n/g) ?? []) {
         if (res.destroyed) return;
         res.write(`data: ${JSON.stringify({ choices: [{ delta: { content: word } }] })}\r\n\r\n`);
-        await new Promise((resolve) => setTimeout(resolve, body.model === 'slow-model' ? 450 : 20));
+        await new Promise((resolve) =>
+          setTimeout(resolve, paragraphs ? 100 : body.model === 'slow-model' ? 450 : 20),
+        );
       }
       res.end('data: {"choices":[{"delta":{},"finish_reason":"stop"}]}\n\ndata: [DONE]\n\n');
       return;
@@ -104,6 +112,8 @@ test.describe.serial('installed Chrome extension', () => {
     let popup = await context.newPage();
     await popup.goto(popupUrl);
     await popup.getByLabel('AI 服务商').selectOption('custom');
+    await expect(popup.getByLabel('思考强度', { exact: true })).toHaveValue('default');
+    await popup.getByLabel('思考强度', { exact: true }).selectOption('high');
     await popup.getByLabel('Base URL', { exact: true }).fill(`${origin}/v1`);
     await popup.getByLabel(/^API Key/).fill('draft-test-key');
     await popup.getByLabel('AI 服务商').selectOption('deepseek');
@@ -117,6 +127,7 @@ test.describe.serial('installed Chrome extension', () => {
     popup = await context.newPage();
     await popup.goto(popupUrl);
     await expect(popup.getByLabel('Base URL', { exact: true })).toHaveValue('http://');
+    await expect(popup.getByLabel('思考强度', { exact: true })).toHaveValue('high');
     await expect(popup.getByLabel(/^API Key/)).toHaveValue('latest-draft-key');
     await popup.getByRole('button', { name: '保存更改', exact: true }).click();
     await expect(popup.getByText('请输入完整的 Base URL', { exact: false })).toBeVisible();
@@ -165,8 +176,12 @@ test.describe.serial('installed Chrome extension', () => {
     await options.getByRole('button', { name: '选择模型', exact: true }).click();
     await options.getByLabel('搜索模型').fill('margin');
     await options.getByRole('button', { name: 'margin-test', exact: true }).click();
+    await options.getByLabel('思考强度', { exact: true }).selectOption('low');
     await options.getByRole('button', { name: '测试连接', exact: true }).click();
     await expect(options.getByText('连接成功', { exact: false })).toBeVisible();
+    expect(requests.at(-1)?.reasoning_effort).toBe('low');
+    await options.getByLabel('思考强度', { exact: true }).selectOption('none');
+    await expect(options.getByText('连接成功', { exact: false })).toHaveCount(0);
     await options.getByRole('button', { name: '保存设置', exact: true }).click();
     await expect(options.getByText('设置已保存，开始阅读吧。')).toBeVisible();
     const stored = await options.evaluate(async () => ({
@@ -179,9 +194,11 @@ test.describe.serial('installed Chrome extension', () => {
     expect(JSON.stringify(stored.public)).not.toContain('margin-test-key');
     await options.reload();
     await expect(options.getByLabel('阅读模型', { exact: true })).toHaveValue('margin-test');
+    await expect(options.getByLabel('思考强度', { exact: true })).toHaveValue('none');
     const popup = await context.newPage();
     await popup.goto(`chrome-extension://${extensionId}/popup.html`);
     await expect(popup.getByLabel('阅读模型', { exact: true })).toHaveValue('margin-test');
+    await expect(popup.getByLabel('思考强度', { exact: true })).toHaveValue('none');
     await popup.setViewportSize({ width: 392, height: 800 });
     await popup.screenshot({ path: 'docs/screenshots/popup.png', fullPage: true });
     await popup.close();
@@ -203,6 +220,7 @@ test.describe.serial('installed Chrome extension', () => {
     await expect(article.getByText('作者说，理解故事不只看字面', { exact: false })).toBeVisible();
     await expect(article.getByRole('button', { name: '停止生成' })).toHaveCount(0);
     const last = requests.at(-1)!;
+    expect(last.reasoning_effort).toBe('none');
     expect(last.messages.at(-1)?.content).toContain('翻译');
     expect(last.messages.at(-1)?.content).toContain('上下文解释');
     expect(last.messages[0]?.role).toBe('system');
@@ -256,10 +274,76 @@ test.describe.serial('installed Chrome extension', () => {
     await expect(input).toHaveValue('');
     await expect(article.getByText('她虽然微笑着答应', { exact: false })).toBeVisible();
     expect(requests.at(-1)!.messages.at(-1)?.content).toBe('请举一个例子');
+    expect(requests.at(-1)?.reasoning_effort).toBe('none');
     expect(requests.at(-1)!.messages.filter((m) => m.role === 'assistant')).toHaveLength(1);
     await article.keyboard.press('Escape');
     await expect(article.getByRole('dialog')).toHaveCount(0);
     await expect.poll(() => errors).toEqual([]);
+  });
+
+  test('first explanation stays at the top; follow-ups track the stream until the reader scrolls up', async () => {
+    const page = await context.newPage();
+    streamingParagraphs = Array.from(
+      { length: 50 },
+      (_, index) =>
+        `第 ${index + 1} 段：结合上下文理解这句话，留意作者的语气和没有直接表达的意思。\n\n`,
+    );
+    try {
+      await page.goto(`${origin}/scrolling`);
+      await selectPhrase(page);
+      const viewport = page.locator('.margin-viewport');
+      const metrics = () =>
+        viewport.evaluate((element) => ({
+          top: element.scrollTop,
+          height: element.scrollHeight,
+          bottom: element.scrollHeight - element.clientHeight - element.scrollTop,
+        }));
+      await expect.poll(async () => (await metrics()).bottom).toBeGreaterThan(300);
+      expect((await metrics()).top).toBe(0);
+      await expect(page.getByRole('button', { name: '停止生成' })).toHaveCount(0);
+      expect((await metrics()).top).toBe(0);
+
+      const input = page.getByLabel('向 Margin 提问');
+      await input.fill('请进一步解释');
+      await input.press('Enter');
+      await expect(page.getByRole('button', { name: '停止生成' })).toBeVisible();
+      await expect.poll(async () => (await metrics()).bottom).toBeLessThan(2);
+      const following = await metrics();
+      await expect
+        .poll(async () => (await metrics()).height)
+        .toBeGreaterThan(following.height + 150);
+      await expect.poll(async () => (await metrics()).bottom).toBeLessThan(2);
+
+      await viewport.hover();
+      const beforeWheel = await metrics();
+      await page.mouse.wheel(0, -600);
+      await expect.poll(async () => (await metrics()).top).toBeLessThan(beforeWheel.top - 200);
+      // Wait for the wheel gesture to settle, then verify continued output cannot pull us down.
+      await expect.poll(async () => (await metrics()).bottom).toBeGreaterThan(500);
+      const reading = await metrics();
+      await expect.poll(async () => (await metrics()).height).toBeGreaterThan(reading.height + 150);
+      expect(Math.abs((await metrics()).top - reading.top)).toBeLessThan(2);
+
+      await page.getByRole('button', { name: '滚动到最新回答' }).click();
+      await expect.poll(async () => (await metrics()).bottom).toBeLessThan(2);
+      const resumed = await metrics();
+      await expect.poll(async () => (await metrics()).height).toBeGreaterThan(resumed.height + 150);
+      await expect.poll(async () => (await metrics()).bottom).toBeLessThan(2);
+      await expect(page.getByRole('button', { name: '停止生成' })).toHaveCount(0);
+
+      await viewport.hover();
+      await page.mouse.wheel(0, -600);
+      await expect.poll(async () => (await metrics()).bottom).toBeGreaterThan(200);
+      await input.fill('再举一个例子');
+      await page.getByRole('button', { name: '发送问题' }).click();
+      await expect(page.getByRole('button', { name: '停止生成' })).toBeVisible();
+      await expect.poll(async () => (await metrics()).bottom).toBeLessThan(2);
+      await page.getByRole('button', { name: '停止生成' }).click();
+      await expect.poll(() => errors).toEqual([]);
+    } finally {
+      streamingParagraphs = undefined;
+      await page.close();
+    }
   });
 
   test('configured shortcut propagates without reloading the article and unmodified selections stay quiet', async () => {

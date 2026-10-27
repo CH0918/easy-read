@@ -24,6 +24,15 @@ beforeEach(() => {
 });
 
 describe('Chrome settings storage', () => {
+  it('persists reasoning drafts locally and syncs the applied setting', async () => {
+    const draft = { ...DEFAULT_SETTINGS, reasoningEffort: 'none' as const };
+    await saveSettingsDraft(draft, DEFAULT_SETTINGS);
+    expect((await loadSettingsDraft(DEFAULT_SETTINGS)).reasoningEffort).toBe('none');
+    expect((await loadSettings()).reasoningEffort).toBe('default');
+    await saveSettings(draft);
+    expect(sync['margin.config.v1']).toMatchObject({ reasoningEffort: 'none' });
+    expect((await loadSettings()).reasoningEffort).toBe('none');
+  });
   it('retains incomplete input locally without applying or syncing the draft', async () => {
     const draft = { ...DEFAULT_SETTINGS, baseUrl: 'http://', apiKey: 'draft-key', enabled: false };
     await saveSettingsDraft(draft, DEFAULT_SETTINGS);
